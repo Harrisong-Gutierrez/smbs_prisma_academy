@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Coach {
+  coach_id      Int                 @id @default(autoincrement())
+  coach_name    String
+  email         String?             @unique
+  phone_number  String?     
+  course_id     Int?                
+  Course        Course?             @relation(fields: [course_id], references: [course_id])
+  CoachTopic    CoachTopic[]
+  Schedule      Schedule[]
+  CoachTopicSchedule CoachTopicSchedule[]
+
+  @@index([course_id], name: "course_id")
+}
+
+model Course {
+  course_id    Int       @id @default(autoincrement())
+  course_name  String
+  description  String?
+  start_date   DateTime?
+  end_date     DateTime?
+  Coaches      Coach[]
+  Topics       Topic[]
+}
+
+model Topic {
+  topic_id     Int                   @id @default(autoincrement())
+  topic_name   String
+  description  String?
+  duration     Int?
+  course_id    Int?
+  Course       Course?               @relation(fields: [course_id], references: [course_id])
+  CoachTopic   CoachTopic[]
+  Schedule     Schedule[]
+  CoachTopicSchedule CoachTopicSchedule[]
+
+  @@index([course_id], name: "course_id")
+}
+
+model CoachTopic {
+  coach_id  Int
+  topic_id  Int
+  Coach     Coach  @relation(fields: [coach_id], references: [coach_id])
+  Topic     Topic  @relation(fields: [topic_id], references: [topic_id])
+
+  @@id([coach_id, topic_id])
+  @@index([topic_id], name: "topic_id")
+}
+
+model Schedule {
+  schedule_id       Int                   @id @default(autoincrement())
+  coach_id          Int?
+  topic_id          Int?
+  schedule_time     DateTime?
+  schedule_day      String?
+  schedule_location String?
+  Coach             Coach?                @relation(fields: [coach_id], references: [coach_id])
+  Topic             Topic?                @relation(fields: [topic_id], references: [topic_id])
+  CoachTopicSchedule CoachTopicSchedule[]
+
+  @@index([coach_id], name: "coach_id")
+  @@index([topic_id], name: "topic_id")
+}
+
+model CoachTopicSchedule {
+  coach_id    Int
+  topic_id    Int
+  schedule_id Int
+  Coach       Coach    @relation(fields: [coach_id], references: [coach_id])
+  Topic       Topic    @relation(fields: [topic_id], references: [topic_id])
+  Schedule    Schedule @relation(fields: [schedule_id], references: [schedule_id])
+
+  @@id([coach_id, topic_id, schedule_id])
+  @@index([topic_id], name: "topic_id")
+  @@index([schedule_id], name: "schedule_id")
+}
